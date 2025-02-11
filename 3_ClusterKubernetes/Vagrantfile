@@ -1,0 +1,61 @@
+# Seccion de variables
+BASE_BOX_IMAGE = "ubuntu/jammy64"
+CPUS_MASTER = 1
+MEMORY_MASTER = 2048
+CPUS_WORKER = 1
+MEMORY_WORKER = 1024
+
+WORKER_NODE_COUNT = 1
+
+# Comienzo de la configuracion
+
+Vagrant.configure("2") do |config|
+
+# Este scrip se ejecuta en todas las VM
+  config.vm.provision "shell", path: "scripts/common.sh"  
+
+# Define el nodo master del cluster
+  config.vm.define "master" do |master|
+    master.vm.box = BASE_BOX_IMAGE
+    master.vm.hostname = "master.cluster.com"
+    master.vm.network "public_network"
+    master.vm.network "private_network", ip: "192.168.1.100"
+    master.vm.provider "virtualbox" do |vb|
+      vb.name = "master"
+      vb.cpus = CPUS_MASTER
+      vb.memory = MEMORY_MASTER
+    end
+  end
+
+  # Define los nodos worker del cluster según la variable WORKER_NODE_COUNT
+  (1..WORKER_NODE_COUNT).each do |i|
+    config.vm.define "worker#{i}" do |worker|
+      worker.vm.box = BASE_BOX_IMAGE
+      worker.vm.hostname = "worker#{i}.cluster.com"
+      worker.vm.network "public_network"
+      worker.vm.network "private_network", ip: "192.168.1.10#{i}"
+      worker.vm.provider "virtualbox" do |vb|
+        vb.name = "worker_#{i}"
+        vb.cpus = CPUS_WORKER
+        vb.memory = MEMORY_WORKER
+      end
+      worker.vm.provision "shell", path: "scripts/worker.sh", args: [i]
+    end
+  end  
+  
+  config.trigger.after :up do |trigger|
+    trigger.ruby do |env, _| 
+      puts "\n=== SSH Connection Info ===\n"
+      env.active_machines.each do |name, provider|
+        machine = env.machine(name, provider)
+        host_port = machine.config.vm.networks.map { |n| n[1][:host] if n[0] == :forwarded_port && n[1][:guest] == 22 }.compact.first
+        puts "#{name}: ssh -p #{host_port} vagrant@127.0.0.1"
+      end
+      puts "\n===========================\n"
+    end
+  end 
+
+
+
+
+end
