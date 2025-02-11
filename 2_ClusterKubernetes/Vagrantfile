@@ -42,4 +42,20 @@ Vagrant.configure("2") do |config|
       worker.vm.provision "shell", path: "scripts/worker.sh", args: [i]
     end
   end  
+  
+  config.trigger.after :up do |trigger|
+    trigger.ruby do |env, _| 
+      puts "\n=== SSH Connection Info ===\n"
+      env.active_machines.each do |name, provider|
+        machine = env.machine(name, provider)
+        host_port = machine.config.vm.networks.map { |n| n[1][:host] if n[0] == :forwarded_port && n[1][:guest] == 22 }.compact.first
+        puts "#{name}: ssh -p #{host_port} vagrant@127.0.0.1"
+      end
+      puts "\n===========================\n"
+    end
+  end 
+
+
+
+
 end

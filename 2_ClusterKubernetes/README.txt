@@ -4,11 +4,16 @@
 
 Links interesantes:
 https://www.youtube.com/watch?v=sgCojrRmYwM
+https://github.com/mohitkr05/vagrant/tree/main/14_kubernetes_cluster1
 
 Comandos:
 # Iniciar un proyecto 
     - vagrant init hashicorp-education/ubuntu-24-04 --box-version 0.1.0
     -> Crear el archivo Vagrantfile
+
+# Validar la configuracio
+    - vagrant validate
+    -> Verifica que la sintaxis del Vagrantfile sea correcta. Chequea errores de configuración. No ejecuta las máquinas virtuales, solo valida el archivo.    
 
 # Iniciar la configuración definida en el Vagrantfile
     - vagrant up 
